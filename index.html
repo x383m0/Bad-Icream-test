@@ -79,7 +79,7 @@ input{font-family:inherit;font-size:18px;width:8ch;text-align:center;text-transf
     </div>
   </div>
 </div>
-<div id="help">Move: ARROWS / WASD · Aim: MOUSE · Freeze / break ice: CLICK or SPACE<br>Shoot a line of ice to wall off enemies, shoot again to break it. Collect every fruit to clear the level.</div>
+<div id="help">Move: ARROWS / WASD · Freeze / break ice: SPACE<br>Shoot a line of ice to wall off enemies, shoot again to break it. Collect every fruit to clear the level.</div>
 
 <script>
 "use strict";
@@ -587,7 +587,7 @@ function update(dt){
     while(inp.events.length){ pl.queue.push(inp.events.shift()); if(pl.queue.length>2) pl.queue.shift(); }
     const cont=pl.wasMoving;
     if(pl.cast>0){ pl.cast-=dt; pl.moving=false; pl.wasMoving=false; if(pl.cast<=0){ pl.cast=0; doFire(pl); } }
-    else { pl.queue.length=0; step(pl,dt,5,()=>inp.dir||null); }   // moves right away, no turn delay
+    else step(pl,dt,5,()=>{ const q=pl.queue.shift(); return inp.dir||q||null; });   // instant; quick taps still count   // moves right away, no turn delay
     if(pl.cast<=0 && DIRS.includes(inp.aim)) pl.face=inp.aim;          // mouse decides where you look
     pl.wasMoving=pl.moving;
     if(inp.fire!==inp.last){ inp.last=inp.fire; fire(pl); }
@@ -748,10 +748,7 @@ addEventListener('blur',()=>{ held.length=0; });
 const curDir=()=>held[held.length-1]||'';
 let mouse=null;   // last mouse position in board pixels, null until the mouse is used
 function boardXY(ev){ const r=cv.getBoundingClientRect(); return [(ev.clientX-r.left)/r.width*cv.width/S, (ev.clientY-r.top)/r.height*cv.height/S-TOP]; }
-cv.addEventListener('mousemove',ev=>{ mouse=boardXY(ev); });
-cv.addEventListener('mousedown',ev=>{ if(ev.button===0){ ev.preventDefault(); mouse=boardXY(ev); localFire++; } });
-cv.addEventListener('contextmenu',ev=>ev.preventDefault());
-function curAim(){
+function curAim(){ return ''; // keyboard only
   if(!mouse||!snap) return '';
   const me=myIndex(), d=disp.p[me]; if(!d) return '';
   const dx=mouse[0]-(d[0]*16+8), dy=mouse[1]-(d[1]*16+4);
