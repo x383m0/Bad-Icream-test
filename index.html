@@ -271,7 +271,7 @@ function loadLevel(n){
     G.grid.push(row); }
   G.spawns=sp;
   G.players.forEach((pl,i)=>{ const [x,y]=sp[i]; Object.assign(pl,{x,y,fx:x,fy:y,p:1,face:'d',alive:pl.present,cd:0,moving:false,wasMoving:false,queue:[],cast:0}); });
-  G.espd=1+loop*0.18; G.phase='ready'; G.timer=1.8;
+  G.espd=1+loop*0.12; G.phase='ready'; G.timer=1.8;
 }
 const tile=(x,y)=>(x<0||y<0||x>=COLS||y>=ROWS)?1:G.grid[y][x];
 const free=(x,y)=>tile(x,y)===0;
@@ -296,9 +296,9 @@ function fire(pl){ if(pl.cd>0||pl.cast>0) return; pl.cd=CAST+0.15; pl.cast=CAST;
 function doFire(pl){
   pl.face=pl.castDir||pl.face;
   const dx=DX[pl.face], dy=DY[pl.face]; let x=pl.x+dx, y=pl.y+dy, i=0;
-  if(tile(x,y)===2){ while(tile(x,y)===2){ G.pending.push({at:now+i*0.07,op:'b',x,y}); x+=dx; y+=dy; i++; } }
+  if(tile(x,y)===2){ while(tile(x,y)===2){ G.pending.push({at:now+i*0.09,op:'b',x,y}); x+=dx; y+=dy; i++; } }
   else if(tile(x,y)===0 && !occupied(x,y)){ const id=++chainId;
-    while(tile(x,y)===0 && !occupied(x,y) && i<14){ G.pending.push({at:now+i*0.09,op:'i',x,y,id}); x+=dx; y+=dy; i++; } }
+    while(tile(x,y)===0 && !occupied(x,y) && i<14){ G.pending.push({at:now+i*0.11,op:'i',x,y,id}); x+=dx; y+=dy; i++; } }
 }
 function blobChoose(e){
   const fr=DIRS.filter(d=>free(e.x+DX[d],e.y+DY[d])); if(!fr.length) return null;
@@ -330,11 +330,11 @@ function update(dt){
     while(inp.events.length){ pl.queue.push(inp.events.shift()); if(pl.queue.length>2) pl.queue.shift(); }
     const cont=pl.wasMoving;
     if(pl.cast>0){ pl.cast-=dt; pl.moving=false; pl.wasMoving=false; if(pl.cast<=0){ pl.cast=0; doFire(pl); } }
-    else step(pl,dt,7,e=>{
+    else step(pl,dt,5,e=>{
       if(e.queue.length){ const ev=e.queue.shift();
         if(ev!==e.face && !cont){ e.face=ev; return null; }   // first tap: just turn
         return ev; }                                         // tap while facing (or while walking): step
-      if(inp.dir && (cont || now-inp.holdStart>=0.15)) return inp.dir;   // holding: walk
+      if(inp.dir && (cont || now-inp.holdStart>=0.08)) return inp.dir;   // holding: walk
       return null;
     });
     pl.wasMoving=pl.moving;
@@ -343,7 +343,7 @@ function update(dt){
     const fi=G.fruits.findIndex(f=>f.x===tx&&f.y===ty); if(fi>=0){ G.fruits.splice(fi,1); pl.score+=100; }
   });
   if(G.phase==='play'){
-    G.enemies.forEach(e=>step(e,dt,(e.type?3.1:3.5)*G.espd,e.type?chaseChoose:blobChoose));
+    G.enemies.forEach(e=>step(e,dt,(e.type?2.1:2.4)*G.espd,e.type?chaseChoose:blobChoose));
     for(const pl of G.players){ if(!pl.present||!pl.alive) continue; const [a,b]=rpos(pl);
       for(const e of G.enemies){ const [c,d]=rpos(e); if(Math.abs(a-c)<0.6&&Math.abs(b-d)<0.6){ pl.alive=false; break; } } }
     const pres=G.players.filter(p=>p.present);
